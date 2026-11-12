@@ -1,0 +1,22 @@
+{
+  "masjid": { "name": "Example Masjid" },
+  "location": { "latitude": 43.6532, "longitude": -79.3832 },
+  "calculation": {
+    "method": "NorthAmerica",
+    "madhab": "Shafi",
+    "highLatitudeRule": "MiddleOfTheNight",
+    "adjustments": { "fajr": 0, "sunrise": 0, "dhuhr": 0, "asr": 0, "maghrib": 0, "isha": 0 }
+  },
+  "iqamah": { "fajr": "+20", "dhuhr": "13:30", "asr": "+15", "maghrib": "+5", "isha": "+15" },
+  "iqamahRoundMinutes": 5,
+  "jumuah": ["13:15", "13:45"],
+  "rolloverAfterIshaMinutes": 60,
+  "hijriOffsetDays": 0,
+  "language": "en",
+  "theme": "teal",
+  "clock": "12h",
+  "announcements": [
+    "Welcome. Please switch your phone to silent.",
+    "Edit config.json to put your own announcements here."
+  ]
+}

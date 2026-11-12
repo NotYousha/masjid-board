@@ -1,0 +1,20 @@
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - name: Check every language file has every key
+        run: |
+          node -e '
+            const fs = require("fs");
+            const keys = Object.keys(JSON.parse(fs.readFileSync("i18n/en.json"))).sort().join();
+            for (const f of fs.readdirSync("i18n")) {
+              const k = Object.keys(JSON.parse(fs.readFileSync("i18n/" + f))).sort().join();
+              if (k !== keys) { console.error(f + " keys differ from en.json"); process.exit(1); }
+            }'

@@ -1,0 +1,12 @@
+{
+  "name": "masjid-board",
+  "version": "0.1.0",
+  "description": "Free, open-source prayer-times screen for masjids. Runs in any browser, no build step.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "start": "npx --yes serve@14.2.4 ."
+  }
+}
