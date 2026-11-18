@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Masjid Board setup</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 42rem; margin: 0 auto; padding: 1rem; color: #1b2b2b; background: #f6f8f7; }
+    h1 { font-size: 1.5rem; }
+    fieldset { margin: 1rem 0; border: 1px solid #b8c7c4; border-radius: 6px; background: #fff; }
+    legend { font-weight: 600; padding: 0 0.4rem; }
+    label { display: block; margin: 0.6rem 0 0.2rem; font-weight: 600; }
+    input, select, textarea { font: inherit; padding: 0.4rem; width: 100%; box-sizing: border-box; }
+    .row { display: grid; grid-template-columns: 7rem 1fr 1fr; gap: 0.5rem; align-items: center; margin: 0.4rem 0; }
+    .row span { font-weight: 600; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .hint { font-size: 0.875rem; color: #44595a; margin: 0.2rem 0; }
+    button { font: inherit; padding: 0.5rem 1rem; margin-top: 0.5rem; cursor: pointer; }
+    #out { font-family: ui-monospace, Consolas, monospace; font-size: 0.875rem; min-height: 16rem; }
+    #msg { min-height: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Masjid Board setup</h1>
+  <p>Fill in the form. The <code>config.json</code> at the bottom updates as you type. Copy it into <code>config.json</code> in your fork (see the README). Nothing is sent anywhere: this page runs in your browser.</p>
+
+  <form id="f" onsubmit="return false">
+    <fieldset>
+      <legend>Masjid and location</legend>
+      <label for="name">Masjid name</label>
+      <input id="name" value="Example Masjid">
+      <div class="two">
+        <div><label for="lat">Latitude</label><input id="lat" type="number" step="any" value="43.6532"></div>
+        <div><label for="lon">Longitude</label><input id="lon" type="number" step="any" value="-79.3832"></div>
+      </div>
+      <p class="hint">Right-click your masjid in Google Maps to copy the coordinates.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Calculation</legend>
+      <label for="method">Method</label>
+      <select id="method"></select>
+      <label for="madhab">Asr</label>
+      <select id="madhab"><option value="Shafi">Shafi (standard)</option><option value="Hanafi">Hanafi (later Asr)</option></select>
+      <label for="hl">High latitude rule</label>
+      <select id="hl"><option>MiddleOfTheNight</option><option>SeventhOfTheNight</option><option>TwilightAngle</option></select>
+      <label for="hijri">Hijri date offset (days)</label>
+      <input id="hijri" type="number" step="1" value="0">
+    </fieldset>
+
+    <fieldset>
+      <legend>Iqamah</legend>
+      <p class="hint">Choose "Minutes after adhan" and enter a number, or "Fixed time" and pick a clock time.</p>
+      <div id="iqamah"></div>
+      <label for="round">Round "minutes after adhan" up to (minutes, 0 for no rounding)</label>
+      <input id="round" type="number" min="0" step="1" value="5">
+      <label for="jumuah">Jumu'ah times (24-hour, comma separated)</label>
+      <input id="jumuah" value="13:15, 13:45">
+    </fieldset>
+
+    <fieldset>
+      <legend>Display</legend>
+      <label for="lang">Language</label>
+      <select id="lang"><option value="en">English</option><option value="ar">Arabic</option><option value="ur">Urdu</option></select>
+      <label for="theme">Theme</label>
+      <input id="theme" value="teal">
+      <p class="hint">The file name (without .css) of a theme in the <code>themes</code> folder.</p>
+      <label for="clock">Clock</label>
+      <select id="clock"><option value="12h">12-hour</option><option value="24h">24-hour</option></select>
+      <label for="news">Announcements (one per line)</label>
+      <textarea id="news" rows="4">Welcome. Please switch your phone to silent.</textarea>
+    </fieldset>
+  </form>
+
+  <h2>Your config.json</h2>
+  <textarea id="out" readonly aria-label="Generated config.json"></textarea>
+  <button id="copy" type="button">Copy</button>
+  <button id="download" type="button">Download config.json</button>
+  <p id="msg" role="status"></p>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const METHODS = ['NorthAmerica', 'MuslimWorldLeague', 'Egyptian', 'Karachi', 'UmmAlQura', 'Dubai', 'Qatar', 'Kuwait', 'MoonsightingCommittee', 'Singapore', 'Turkey', 'Tehran'];
+    const PRAYERS = [['fajr', 'Fajr', 'after', '20'], ['dhuhr', 'Dhuhr', 'fixed', '13:30'], ['asr', 'Asr', 'after', '15'], ['maghrib', 'Maghrib', 'after', '5'], ['isha', 'Isha', 'after', '15']];
+
+    $('method').innerHTML = METHODS.map((m) => `<option>${m}</option>`).join('');
+    $('iqamah').innerHTML = PRAYERS.map(([k, label, mode, val]) => `
+      <div class="row">
+        <span>${label}</span>
+        <select id="${k}-mode" aria-label="${label} iqamah type">
+          <option value="after"${mode === 'after' ? ' selected' : ''}>Minutes after adhan</option>
+          <option value="fixed"${mode === 'fixed' ? ' selected' : ''}>Fixed time</option>
+        </select>
+        <input id="${k}-val" aria-label="${label} iqamah value" value="${val}">
+      </div>`).join('');
+
+    function build() {
+      const num = (id, fallback) => { const n = parseFloat($(id).value); return Number.isFinite(n) ? n : fallback; };
+      const iqamah = {};
+      for (const [k] of PRAYERS) {
+        const v = $(`${k}-val`).value.trim();
+        iqamah[k] = $(`${k}-mode`).value === 'after' ? `+${v.replace(/^\+/, '')}` : v;
+      }
+      return {
+        masjid: { name: $('name').value },
+        location: { latitude: num('lat', 0), longitude: num('lon', 0) },
+        calculation: {
+          method: $('method').value,
+          madhab: $('madhab').value,
+          highLatitudeRule: $('hl').value,
+          adjustments: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 }
+        },
+        iqamah,
+        iqamahRoundMinutes: num('round', 0),
+        jumuah: $('jumuah').value.split(',').map((s) => s.trim()).filter(Boolean),
+        rolloverAfterIshaMinutes: 60,
+        hijriOffsetDays: num('hijri', 0),
+        language: $('lang').value,
+        theme: $('theme').value.trim() || 'teal',
+        clock: $('clock').value,
+        announcements: $('news').value.split('\n').map((s) => s.trim()).filter(Boolean)
+      };
+    }
+
+    function render() { $('out').value = JSON.stringify(build(), null, 2) + '\n'; $('msg').textContent = ''; }
+    $('f').addEventListener('input', render);
+    $('copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText($('out').value); $('msg').textContent = 'Copied.'; }
+      catch { $('out').select(); $('msg').textContent = 'Press Ctrl+C to copy the selected text.'; }
+    });
+    $('download').addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([$('out').value], { type: 'application/json' }));
+      a.download = 'config.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    render();
+  </script>
+</body>
+</html>
