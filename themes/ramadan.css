@@ -1,0 +1,12 @@
+/* Ramadan: deep midnight indigo with lantern gold. Copy this file to make a new theme. */
+:root {
+  --bg-from: hsl(248 48% 17%);
+  --bg-via: hsl(250 50% 11%);
+  --bg-to: hsl(255 46% 7%);
+  --ink: hsl(45 40% 95%);
+  --ink-muted: hsl(250 22% 78%);
+  --gold: hsl(43 82% 64%);
+  --gold-strong: hsl(45 92% 70%);
+  --line: hsl(45 40% 95% / 0.14);
+  --hl: hsl(43 82% 64% / 0.16);
+}
