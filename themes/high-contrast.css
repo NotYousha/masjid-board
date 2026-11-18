@@ -1,0 +1,12 @@
+/* High contrast: pure black with white text and bright yellow. Copy this file to make a new theme. */
+:root {
+  --bg-from: hsl(0 0% 0%);
+  --bg-via: hsl(0 0% 0%);
+  --bg-to: hsl(0 0% 0%);
+  --ink: hsl(0 0% 100%);
+  --ink-muted: hsl(0 0% 86%);
+  --gold: hsl(52 100% 60%);
+  --gold-strong: hsl(55 100% 70%);
+  --line: hsl(0 0% 100% / 0.35);
+  --hl: hsl(52 100% 60% / 0.22);
+}
